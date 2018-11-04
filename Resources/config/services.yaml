@@ -1,0 +1,7 @@
+services:
+    Nomadopolis\PolymathBundle\Component\Polymath:
+        arguments:
+            - 'localhost'
+            - '%kernel.project_dir%/src/Depository/'
+            
+    nomadopolis_polymath: '@Nomadopolis\PolymathBundle\Component\Polymath'

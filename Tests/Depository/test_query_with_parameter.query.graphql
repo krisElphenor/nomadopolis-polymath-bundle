@@ -1,0 +1,9 @@
+{
+    test(argument_a: ?arg_a) {
+        name
+        age
+        city(argument_b: ?arg_b) {
+            name
+        }
+    }
+}
