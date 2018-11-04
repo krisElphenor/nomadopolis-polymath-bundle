@@ -1,6 +1,12 @@
 **Polymath Bundle**
 
-After installing the bundle (using git for now), enable the bundle:
+To install Polymath in your project:
+
+```
+git submodule add https://github.com/krisElphenor/nomadopolis-polymath-bundle.git
+```
+
+After installing the bundle, enable it:
 
 ```
 // config/bundles.php
