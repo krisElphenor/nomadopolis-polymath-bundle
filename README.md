@@ -1,10 +1,25 @@
 **Polymath Bundle**
 ===========================================
 
-To install Polymath in your project, run this at the root of your project:
+To install Polymath in your project, add this line to your composer.json:
+
+```yaml
+// composer.json
+{
+    ...
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/krisElphenor/nomadopolis-polymath-bundle"
+        }
+    ],
+}
+``` 
+
+...then, run:
 
 ```console
-git submodule add https://github.com/krisElphenor/nomadopolis-polymath-bundle.git
+composer update
 ```
 
 After installing the bundle, enable it:

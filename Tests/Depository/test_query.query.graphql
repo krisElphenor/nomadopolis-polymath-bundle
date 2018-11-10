@@ -1,4 +1,4 @@
-{
+query testQuery {
     test {
         name
         age

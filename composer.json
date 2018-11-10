@@ -34,10 +34,5 @@
     "exclude-from-classmap": [
       "/Tests/"
     ]
-  },
-  "autoload-dev": {
-    "psr-4": {
-      "Nomadopolis\\PolymathBundle\\Tests\\": "/Tests/"
-    }
   }
 }

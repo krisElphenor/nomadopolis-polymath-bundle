@@ -1,8 +1,8 @@
-{
-    test(argument_a: ?arg_a) {
+query testQueryWithArgument($arg_a: String, $arg_b: String) {
+    test(argument_a: $arg_a) {
         name
         age
-        city(argument_b: ?arg_b) {
+        city(argument_b: $arg_b) {
             name
         }
     }

@@ -29,7 +29,7 @@
 			$this->polymath_subject = new Polymath('end_point_test_url', __DIR__.'/../Depository');
 
 			$this->expected_query = <<<EOT
-{
+query testQuery {
     test {
         name
         age
@@ -40,11 +40,11 @@
 }
 EOT;
 			$this->expected_query_with_argument = <<<EOT
-{
-    test(argument_a: "hello") {
+query testQueryWithArgument(\$arg_a: String, \$arg_b: String) {
+    test(argument_a: \$arg_a) {
         name
         age
-        city(argument_b: 123) {
+        city(argument_b: \$arg_b) {
             name
         }
     }
@@ -96,7 +96,7 @@ EOT;
 				->prepareQuery($query_name);
 		}
 
-		public function testPrepareQuery__withArgumentShouldMergeArgumentIntoQuery()
+		public function testPrepareQuery__withArgumentShouldMergeArgumentIntoVariablesField()
 		{
 			$query_name = 'test_query_with_parameter.query.graphql';
 			$array_of_arguments = [
@@ -107,7 +107,14 @@ EOT;
 			$this->polymath_subject
 				->prepareQuery($query_name, $array_of_arguments);
 
+			$polymath_reflection = new \ReflectionClass($this->polymath_subject);
+			$variables_field_in_polymath_reflection = $polymath_reflection
+				->getProperty('variables');
+			$variables_field_in_polymath_reflection
+				->setAccessible(true);
+
 			$this->assertEquals($this->expected_query_with_argument, $this->polymath_subject->getQuery());
+			$this->assertEquals($array_of_arguments, $variables_field_in_polymath_reflection->getValue($this->polymath_subject));
 		}
 
 		public function testPrepareQuery__withMissingArgumentShouldThrowAnException()

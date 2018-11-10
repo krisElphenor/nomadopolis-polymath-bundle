@@ -1,114 +1,117 @@
 <?php
-	/**
-	 * Created by PhpStorm.
-	 * User: kris
-	 * Date: 02/11/18
-	 * Time: 00:23
-	 */
 
-	namespace Nomadopolis\PolymathBundle\Component;
+namespace Nomadopolis\PolymathBundle\Component;
 
-	use GuzzleHttp\Client;
-	use Symfony\Component\Finder\Finder;
+use GuzzleHttp\Client;
+use Symfony\Component\Finder\Finder;
 
-	class Polymath
+/**
+ * Class Polymath
+ * @package Nomadopolis\PolymathBundle\Component
+ */
+class Polymath
+{
+	protected $end_point;
+
+	protected $http_client;
+
+	protected $depository_path;
+
+	protected $query = "{}";
+
+	protected $variables = [];
+
+	public function __construct(string $end_point_url, string $depository_path = null)
 	{
-		protected $end_point;
+		$this->end_point = $end_point_url;
+		$this->depository_path = $depository_path;
+		$this->http_client = new Client(['base_uri' => $end_point_url]);
+	}
 
-		protected $http_client;
+	/**
+	 * @param string $depository_query_name
+	 * @param array|null $arguments
+	 *
+	 * @return Polymath
+	 */
+	public function prepareQuery(string $depository_query_name, array $arguments = null): self
+	{
+		$finder = new Finder();
+		$depository_query_name = explode('.', $depository_query_name)[0];
 
-		protected $depository_path;
-
-		protected $query = "{}";
-
-		public function __construct(string $end_point_url, string $depository_path = null)
+		try
 		{
-			$this->end_point = $end_point_url;
-			$this->depository_path = $depository_path;
-			$this->http_client = new Client(['base_uri' => $end_point_url]);
+			$finder
+				->files()
+				->name("$depository_query_name.query.graphql")
+				->in($this->depository_path);
+		}
+		catch (\Exception $exception)
+		{
+			throw new \InvalidArgumentException("Aucun fichier correspondant. Vérifier le nom $depository_query_name");
 		}
 
-		/**
-		 * @param string $depository_query_name
-		 * @param array|null $arguments
-		 *
-		 * @return Polymath
-		 */
-		public function prepareQuery(string $depository_query_name, array $arguments = null): self
+		foreach ( $finder as $file )
 		{
-			$finder = new Finder();
-			$depository_query_name = explode('.', $depository_query_name)[0];
+			$query = $file->getContents();
+			preg_match_all('/\$\w*/', $query, $argument_placeholders);
 
-			try
+			if( !empty($argument_placeholders) )
 			{
-				$finder
-					->files()
-					->name("$depository_query_name.query.graphql")
-					->in($this->depository_path);
-			}
-			catch (\Exception $exception)
-			{
-				throw new \InvalidArgumentException("Aucun fichier correspondant. Vérifier le nom $depository_query_name");
-			}
+				$argument_placeholders = array_map(
+					function($argument){
+						return str_replace('$', '', $argument);
+					},
+					$argument_placeholders[0]);
+				$missing_arguments = array_diff($argument_placeholders, array_keys($arguments ?? []));
 
-			foreach ( $finder as $file )
-			{
-				$query = $file->getContents();
-				preg_match_all('/\?\w*/', $query, $argument_placeholders);
-
-				if( !empty($argument_placeholders) )
-				{
-					$argument_placeholders = array_map(
-						function($argument){
-							return str_replace('?', '', $argument);
-							},
-						$argument_placeholders[0]);
-					$missing_arguments = array_diff($argument_placeholders, array_keys($arguments ?? []));
-
-					if( !empty($missing_arguments) )
-						throw new \RuntimeException( sprintf("Les arguments suivants sont requis: %s", join(', ', $missing_arguments)) );
-
-					foreach ($argument_placeholders as $argument_placeholder)
-					{
-						$new_value = $arguments[$argument_placeholder];
-
-						switch (gettype($new_value))
-						{
-							case "string":
-								$new_value = '"'.$new_value.'"';
-								break;
-							case "array":
-								$new_value = json_encode($new_value);
-								break;
-						}
-
-						$query = str_replace("?$argument_placeholder", $new_value, $query);
-					}
-				}
-
-				$this->query = $query;
-				return $this;
+				if( !empty($missing_arguments) )
+					throw new \RuntimeException( sprintf("Les arguments suivants sont requis: %s", join(', ', array_unique($missing_arguments))) );
 			}
 
-			throw new \InvalidArgumentException("Aucun fichier correspondant. Vérifier le nom");
-		}
+			$this->query = $query;
 
-		public function setCustomQuery(string $custom_query): self
-		{
-			$this->query = $custom_query;
+			if( !empty($arguments) )
+				$this->variables = $arguments;
+
 			return $this;
 		}
 
-		public function getQuery(): string
-		{
-			return $this->query;
-		}
-
-		public function execute(): object
-		{
-			$response = $this->http_client
-				->post($this->end_point, ['json' => ['query' => $this->query]]);
-
-			return json_decode($response->getBody());
-		}
+		throw new \InvalidArgumentException("Aucun fichier correspondant. Vérifier le nom");
 	}
+
+	/**
+	 * @param string $custom_query
+	 *
+	 * @return Polymath
+	 */
+	public function setCustomQuery(string $custom_query): self
+	{
+		$this->query = $custom_query;
+		return $this;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getQuery(): string
+	{
+		return $this->query;
+	}
+
+	/**
+	 * @return object
+	 */
+	public function execute(): object
+	{
+		$data = ['json' => ['query' => $this->query]];
+
+		if( !empty($this->variables) )
+			$data['json']['variables'] = $this->variables;
+
+		$response = $this->http_client
+			->post($this->end_point, $data);
+
+		return json_decode($response->getBody());
+	}
+}
