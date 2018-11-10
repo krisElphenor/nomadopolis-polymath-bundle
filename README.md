@@ -6,13 +6,16 @@ To install Polymath in your project, add this line to your composer.json:
 ```yaml
 #composer.json
 {
-    ...
+    "require": {
+        ...,
+        "nomadopolis/polymath-bundle": "0.2-alpha"
+    },
     "repositories": [
         {
             "type": "vcs",
             "url": "https://github.com/krisElphenor/nomadopolis-polymath-bundle"
         }
-    ],
+    ]
 }
 ``` 
 
