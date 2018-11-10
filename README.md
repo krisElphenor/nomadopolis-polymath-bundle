@@ -4,7 +4,7 @@
 To install Polymath in your project, add this line to your composer.json:
 
 ```yaml
-// composer.json
+#composer.json
 {
     ...
     "repositories": [
@@ -35,7 +35,7 @@ After installing the bundle, enable it:
 Then, create the package configuration:
 
 ```yaml
-// config/packages/nomadopolis_polymath.yaml
+#config/packages/nomadopolis_polymath.yaml
 nomadopolis_polymath:
     end_point: 'http://url_to_api_endpoint.url'
 ``` 
